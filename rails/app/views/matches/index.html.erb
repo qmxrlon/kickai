@@ -1,0 +1,85 @@
+<% content_for :title, "Spiele" %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
+    <h1 class="text-2xl font-bold text-white">Spiele</h1>
+
+    <%# Filters %>
+    <%= search_form_for @q, url: matches_path, method: :get, html: { class: "flex flex-wrap gap-2 items-center" } do |f| %>
+      <%= f.search_field :home_team_name_or_away_team_name_cont,
+            placeholder: "Team suchen…",
+            class: "px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500" %>
+
+      <select name="league_id" class="px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-sm text-gray-300">
+        <option value="">Alle Ligen</option>
+        <% @leagues.each do |l| %>
+          <option value="<%= l.id %>" <%= "selected" if params[:league_id].to_s == l.id.to_s %>><%= l.name %></option>
+        <% end %>
+      </select>
+
+      <select name="status" class="px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-sm text-gray-300">
+        <option value="">Alle Status</option>
+        <option value="scheduled" <%= "selected" if params[:status] == "scheduled" %>>Geplant</option>
+        <option value="finished"  <%= "selected" if params[:status] == "finished"  %>>Beendet</option>
+      </select>
+
+      <%= f.submit "Suchen", class: "px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-sm font-medium text-white transition cursor-pointer" %>
+    <% end %>
+  </div>
+
+  <%# Match list %>
+  <div class="space-y-3">
+    <% @matches.each do |match| %>
+      <div class="rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 transition group">
+        <%= link_to match_path(match), class: "flex items-center gap-4 px-5 py-4" do %>
+
+          <%# League / Date %>
+          <div class="hidden sm:block w-28 shrink-0 text-right">
+            <p class="text-xs text-gray-500 truncate"><%= match.league.name %></p>
+            <p class="text-xs text-gray-400 mt-0.5"><%= match.scheduled_at.strftime("%d.%m.%Y %H:%M") %></p>
+          </div>
+
+          <%# Teams %>
+          <div class="flex-1 min-w-0 flex items-center gap-3">
+            <span class="font-semibold text-white truncate"><%= match.home_team.name %></span>
+
+            <% if match.finished? %>
+              <span class="shrink-0 font-bold text-lg text-emerald-400 bg-gray-800 px-3 py-0.5 rounded-lg">
+                <%= match.result %>
+              </span>
+            <% else %>
+              <span class="shrink-0 text-xs font-medium text-gray-500 bg-gray-800 px-2 py-0.5 rounded">vs</span>
+            <% end %>
+
+            <span class="font-semibold text-white truncate"><%= match.away_team.name %></span>
+          </div>
+
+          <%# Status & prediction badge %>
+          <div class="shrink-0 flex items-center gap-2">
+            <% if match.has_prediction? && current_user&.can_view_predictions? %>
+              <span class="text-xs px-2 py-1 rounded-full bg-emerald-900/50 text-emerald-400 border border-emerald-800">
+                🔮 KI
+              </span>
+            <% end %>
+            <span class="text-xs px-2 py-1 rounded-full <%= match.finished? ? "bg-gray-800 text-gray-400" : "bg-blue-900/40 text-blue-400" %>">
+              <%= match.status_label %>
+            </span>
+          </div>
+
+        <% end %>
+      </div>
+    <% end %>
+
+    <% if @matches.empty? %>
+      <div class="text-center py-16 text-gray-500">
+        <p class="text-4xl mb-3">⚽</p>
+        <p>Keine Spiele gefunden.</p>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Pagination %>
+  <div class="mt-6">
+    <%== pagy_nav(@pagy) if @pagy.pages > 1 %>
+  </div>
+</div>

@@ -1,0 +1,26 @@
+<%# Compact prediction card for dashboard %>
+<div class="rounded-xl bg-gray-900 border border-gray-800 hover:border-emerald-800 transition p-4">
+  <%= link_to match_path(prediction.match) do %>
+    <p class="text-xs text-gray-500 mb-2 truncate"><%= prediction.match.league.name %></p>
+    <p class="font-semibold text-white text-sm mb-3 truncate"><%= prediction.match.title %></p>
+
+    <%# 1X2 bar %>
+    <div class="flex rounded-lg overflow-hidden h-2 mb-2">
+      <div class="bg-emerald-500" style="width: <%= (prediction.home_win_prob * 100).round %>%"></div>
+      <div class="bg-gray-600" style="width: <%= (prediction.draw_prob * 100).round %>%"></div>
+      <div class="bg-blue-500"  style="width: <%= (prediction.away_win_prob * 100).round %>%"></div>
+    </div>
+    <div class="flex text-xs text-gray-400 justify-between">
+      <span class="text-emerald-400"><%= (prediction.home_win_prob * 100).round %>% H</span>
+      <span><%= (prediction.draw_prob * 100).round %>% U</span>
+      <span class="text-blue-400"><%= (prediction.away_win_prob * 100).round %>% A</span>
+    </div>
+
+    <div class="mt-3 flex items-center justify-between">
+      <span class="text-xs text-gray-500">Konfidenz</span>
+      <span class="text-xs font-bold <%= prediction.confidence_score.to_f >= 70 ? "text-emerald-400" : prediction.confidence_score.to_f >= 50 ? "text-yellow-400" : "text-gray-400" %>">
+        <%= prediction.confidence_score %>%
+      </span>
+    </div>
+  <% end %>
+</div>

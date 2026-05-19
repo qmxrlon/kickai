@@ -1,0 +1,63 @@
+source "https://rubygems.org"
+
+ruby ">= 3.3"
+
+# Rails core
+gem "rails", "~> 8.0"
+gem "pg", "~> 1.5"
+gem "puma", "~> 6.4"
+gem "propshaft"
+
+# Frontend
+gem "turbo-rails"
+gem "stimulus-rails"
+gem "tailwindcss-rails"
+gem "importmap-rails"
+
+# Auth
+gem "devise", "~> 4.9"
+gem "pundit", "~> 2.3"
+
+# Payments
+gem "pay", "~> 7.2"
+gem "stripe", "~> 12.0"
+
+# Background jobs
+gem "sidekiq", "~> 7.3"
+gem "sidekiq-scheduler", "~> 5.0"
+
+# HTTP client (calls Python API)
+gem "faraday", "~> 2.9"
+gem "faraday-retry", "~> 2.2"
+
+# Pagination & search
+gem "pagy", "~> 9.0"
+gem "ransack", "~> 4.1"
+
+# JSON
+gem "jbuilder"
+gem "oj", "~> 3.16"
+
+# Utilities
+gem "bootsnap", require: false
+gem "tzinfo-data", platforms: %i[windows jruby]
+gem "dotenv-rails"
+
+group :development, :test do
+  gem "debug", platforms: %i[mri windows]
+  gem "rspec-rails", "~> 6.1"
+  gem "factory_bot_rails"
+  gem "faker"
+end
+
+group :development do
+  gem "web-console"
+  gem "rack-mini-profiler"
+  gem "annotate"
+end
+
+group :test do
+  gem "shoulda-matchers", "~> 6.0"
+  gem "capybara"
+  gem "selenium-webdriver"
+end

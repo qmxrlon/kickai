@@ -1,0 +1,76 @@
+<% content_for :title, "Dashboard" %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+  <%# Hero banner for unauthenticated / free users %>
+  <% unless current_user&.can_view_predictions? %>
+    <div class="rounded-2xl bg-gradient-to-r from-emerald-900/60 to-gray-900 border border-emerald-800 p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div>
+        <h2 class="text-xl font-bold text-white mb-1">🔮 KI-Vorhersagen freischalten</h2>
+        <p class="text-gray-400 text-sm">Erhalte Wahrscheinlichkeiten, xG-Werte, KI-Analysen und Kelly-Einsätze für alle Spiele.</p>
+      </div>
+      <%= link_to "Jetzt upgraden →", pricing_path, class: "shrink-0 px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold transition" %>
+    </div>
+  <% end %>
+
+  <%# Top predictions (premium) %>
+  <% if current_user&.can_view_predictions? && @top_predictions.any? %>
+    <section class="mb-10">
+      <h2 class="text-lg font-semibold text-gray-200 mb-4">⚡ Top-Vorhersagen heute</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <% @top_predictions.each do |pred| %>
+          <%= render "predictions/prediction_card", prediction: pred %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <%# Upcoming matches %>
+  <section class="mb-10">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-gray-200">📅 Kommende Spiele</h2>
+      <%= link_to "Alle anzeigen →", matches_path, class: "text-sm text-emerald-400 hover:text-emerald-300" %>
+    </div>
+    <div class="space-y-3">
+      <% @upcoming_matches.each do |match| %>
+        <div class="rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 transition">
+          <%= link_to match_path(match), class: "flex items-center justify-between px-5 py-4 gap-4" do %>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs text-gray-500 mb-1"><%= match.league.name %></p>
+              <div class="flex items-center gap-3 font-semibold text-white">
+                <span class="truncate"><%= match.home_team.name %></span>
+                <span class="shrink-0 text-gray-500 text-sm">vs</span>
+                <span class="truncate"><%= match.away_team.name %></span>
+              </div>
+            </div>
+            <div class="shrink-0 text-right">
+              <p class="text-xs text-gray-400"><%= match.scheduled_at.strftime("%d.%m %H:%M") %></p>
+              <% if match.has_prediction? && current_user&.can_view_predictions? %>
+                <span class="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-emerald-900 text-emerald-400">
+                  <%= (match.prediction.home_win_prob * 100).round %>% H
+                </span>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+      <% if @upcoming_matches.empty? %>
+        <p class="text-gray-500 text-sm text-center py-8">Keine kommenden Spiele gefunden. Daten werden demnächst aktualisiert.</p>
+      <% end %>
+    </div>
+  </section>
+
+  <%# Active leagues %>
+  <section>
+    <h2 class="text-lg font-semibold text-gray-200 mb-4">🏆 Ligen</h2>
+    <div class="flex flex-wrap gap-2">
+      <% @active_leagues.each do |league| %>
+        <%= link_to matches_path(league_id: league.id),
+              class: "px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-sm text-gray-300 hover:text-white transition border border-gray-700" do %>
+          <%= league.flag_emoji %> <%= league.name %>
+        <% end %>
+      <% end %>
+    </div>
+  </section>
+
+</div>

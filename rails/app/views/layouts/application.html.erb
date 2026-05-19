@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="de" class="h-full bg-gray-950">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="turbo-cache-control" content="no-cache" data-turbo-track="reload">
+
+    <title><%= content_for?(:title) ? "#{yield(:title)} | KickAI" : "KickAI – KI-Sportwetten Analyse" %></title>
+    <meta name="description" content="<%= content_for?(:meta_description) ? yield(:meta_description) : "KI-gestützte Spielvorhersagen für Fußball, Tennis und mehr." %>">
+
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag "tailwind", "inter-font", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="h-full font-sans text-gray-100 antialiased">
+    <%= render "layouts/navbar" %>
+
+    <% if notice || alert %>
+      <%= render "layouts/flash" %>
+    <% end %>
+
+    <main class="min-h-screen pb-16">
+      <%= yield %>
+    </main>
+
+    <footer class="bg-gray-900 border-t border-gray-800 py-8 mt-auto">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-400">
+          <p>&copy; <%= Time.current.year %> KickAI. Alle Rechte vorbehalten.</p>
+          <p class="text-xs">
+            Keine Wettannahme. Nur zu Informationszwecken. Dieses Produkt enthält keinerlei Glücksspiel.
+          </p>
+          <div class="flex gap-6">
+            <a href="#" class="hover:text-white transition">Datenschutz</a>
+            <a href="#" class="hover:text-white transition">Impressum</a>
+            <a href="#" class="hover:text-white transition">AGB</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

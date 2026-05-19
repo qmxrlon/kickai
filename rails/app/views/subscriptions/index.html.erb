@@ -1,0 +1,73 @@
+<% content_for :title, "Preise & Pläne" %>
+
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="text-center mb-12">
+    <h1 class="text-4xl font-black text-white mb-3">Pläne & Preise</h1>
+    <p class="text-gray-400 text-lg">KI-gestützte Vorhersagen für ernsthafte Analysten.</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-<%= @plans.size %> gap-6">
+    <% @plans.each do |plan| %>
+      <div class="rounded-2xl border p-6 flex flex-col
+                  <%= plan.premium? ? "bg-gradient-to-b from-emerald-950 to-gray-900 border-emerald-700 ring-2 ring-emerald-600" : "bg-gray-900 border-gray-800" %>">
+
+        <% if plan.premium? %>
+          <span class="self-start mb-3 text-xs font-bold px-2 py-1 rounded-full bg-emerald-600 text-white">Beliebteste Wahl</span>
+        <% end %>
+
+        <h2 class="text-xl font-bold text-white mb-1"><%= plan.name %></h2>
+        <p class="text-3xl font-black text-white mb-1">
+          <%= plan.price_display %>
+        </p>
+        <p class="text-xs text-gray-500 mb-6">Kündigung jederzeit möglich</p>
+
+        <%# Features list %>
+        <ul class="space-y-2 mb-8 flex-1">
+          <% [
+               ["predictions_1x2",   "1X2 Wahrscheinlichkeiten"],
+               ["over_under",        "Over/Under Prognosen"],
+               ["btts",              "BTTS Analyse"],
+               ["xg_display",        "Expected Goals (xG)"],
+               ["kelly",             "Kelly-Einsatzrechner"],
+               ["ai_analysis",       "KI-Matchanalyse"],
+               ["all_leagues",       "Alle Ligen"],
+             ].each do |key, label| %>
+            <li class="flex items-center gap-2 text-sm">
+              <% if plan.feature?(key) %>
+                <span class="text-emerald-400">✓</span>
+                <span class="text-gray-200"><%= label %></span>
+              <% else %>
+                <span class="text-gray-600">✗</span>
+                <span class="text-gray-600"><%= label %></span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+
+        <% if user_signed_in? %>
+          <% if plan.free? %>
+            <button disabled class="w-full py-3 rounded-xl bg-gray-800 text-gray-500 font-semibold text-sm cursor-not-allowed">Aktuell aktiv</button>
+          <% elsif current_user.subscribed? %>
+            <%= link_to "Plan wechseln", portal_subscriptions_path, method: :post,
+                  class: "block text-center w-full py-3 rounded-xl bg-gray-700 hover:bg-gray-600 text-white font-semibold text-sm transition" %>
+          <% else %>
+            <%= link_to "#{plan.premium? ? "Premium starten" : "Basic starten"}", new_subscription_path(plan_id: plan.id),
+                  class: "block text-center w-full py-3 rounded-xl font-semibold text-sm transition
+                          #{plan.premium? ? "bg-emerald-500 hover:bg-emerald-400 text-white" : "bg-gray-700 hover:bg-gray-600 text-white"}" %>
+          <% end %>
+        <% else %>
+          <%= link_to "Jetzt loslegen", new_user_registration_path,
+                class: "block text-center w-full py-3 rounded-xl font-semibold text-sm transition
+                        #{plan.premium? ? "bg-emerald-500 hover:bg-emerald-400 text-white" : "bg-gray-700 hover:bg-gray-600 text-white"}" %>
+        <% end %>
+
+      </div>
+    <% end %>
+  </div>
+
+  <p class="text-center text-xs text-gray-600 mt-10">
+    Dieses Produkt enthält keine Wettannahme. Es handelt sich ausschließlich um Informationssoftware.
+    Alle Prognosen basieren auf statistischen Modellen und sind kein Garant für zukünftige Ergebnisse.
+    Glücksspiel kann süchtig machen – Hilfe: <%= link_to "Bundeszentrale für gesundheitliche Aufklärung", "https://www.bzga.de", target: "_blank", class: "underline hover:text-gray-400" %>.
+  </p>
+</div>

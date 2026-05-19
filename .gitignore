@@ -1,0 +1,32 @@
+.env
+*.key
+*.pem
+
+# Rails
+rails/log/
+rails/tmp/
+rails/storage/
+rails/public/assets
+rails/public/packs
+rails/node_modules
+rails/.bundle
+rails/vendor/bundle
+rails/Gemfile.lock
+
+# Python
+python/__pycache__/
+python/**/__pycache__/
+python/*.pyc
+python/.pytest_cache/
+python/ml/saved_models/
+python/.env
+
+# Docker
+.docker-volumes/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store

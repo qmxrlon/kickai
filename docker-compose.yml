@@ -1,0 +1,132 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-kickai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-kickai_production}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kickai}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rails:
+    build:
+      context: ./rails
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: bundle exec puma -C config/puma.rb
+    volumes:
+      - ./rails:/app
+      - bundle_cache:/usr/local/bundle
+      - rails_storage:/app/storage
+    environment:
+      RAILS_ENV: ${RAILS_ENV:-production}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-kickai}:${POSTGRES_PASSWORD}@db/${POSTGRES_DB:-kickai_production}
+      REDIS_URL: redis://redis:6379/0
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY:?RAILS_MASTER_KEY is required}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:?SECRET_KEY_BASE is required}
+      STRIPE_PUBLIC_KEY: ${STRIPE_PUBLIC_KEY}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET}
+      PAYPAL_ENVIRONMENT: ${PAYPAL_ENVIRONMENT:-sandbox}
+      FOOTBALL_DATA_API_KEY: ${FOOTBALL_DATA_API_KEY}
+      PYTHON_API_URL: http://python:8000
+      PYTHON_API_SECRET: ${PYTHON_API_SECRET:?PYTHON_API_SECRET is required}
+      RAILS_LOG_TO_STDOUT: "true"
+      RAILS_SERVE_STATIC_FILES: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      python:
+        condition: service_healthy
+
+  sidekiq:
+    build:
+      context: ./rails
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: bundle exec sidekiq -C config/sidekiq.yml
+    volumes:
+      - ./rails:/app
+      - bundle_cache:/usr/local/bundle
+    environment:
+      RAILS_ENV: ${RAILS_ENV:-production}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-kickai}:${POSTGRES_PASSWORD}@db/${POSTGRES_DB:-kickai_production}
+      REDIS_URL: redis://redis:6379/0
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      FOOTBALL_DATA_API_KEY: ${FOOTBALL_DATA_API_KEY}
+      PYTHON_API_URL: http://python:8000
+      PYTHON_API_SECRET: ${PYTHON_API_SECRET}
+      RAILS_LOG_TO_STDOUT: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  python:
+    build:
+      context: ./python
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    volumes:
+      - ./python:/app
+      - ml_models:/app/ml/saved_models
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-kickai}:${POSTGRES_PASSWORD}@db/${POSTGRES_DB:-kickai_production}
+      FOOTBALL_DATA_API_KEY: ${FOOTBALL_DATA_API_KEY}
+      API_SECRET_KEY: ${PYTHON_API_SECRET}
+      REDIS_URL: redis://redis:6379/0
+      ENVIRONMENT: ${RAILS_ENV:-production}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  nginx:
+    image: nginx:1.25-alpine
+    restart: unless-stopped
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./rails/public:/app/public:ro
+      - nginx_logs:/var/log/nginx
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    depends_on:
+      - rails
+
+volumes:
+  postgres_data:
+  redis_data:
+  bundle_cache:
+  rails_storage:
+  ml_models:
+  nginx_logs:

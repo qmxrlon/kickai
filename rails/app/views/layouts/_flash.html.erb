@@ -1,0 +1,16 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4" id="flash-messages">
+  <% if notice %>
+    <div class="rounded-lg bg-emerald-900/50 border border-emerald-700 px-4 py-3 text-emerald-300 text-sm flex items-center justify-between"
+         data-controller="auto-dismiss" data-auto-dismiss-timeout-value="5000">
+      <span>✓ <%= notice %></span>
+      <button data-action="click->auto-dismiss#dismiss" class="text-emerald-400 hover:text-emerald-200">✕</button>
+    </div>
+  <% end %>
+  <% if alert %>
+    <div class="rounded-lg bg-red-900/50 border border-red-700 px-4 py-3 text-red-300 text-sm flex items-center justify-between"
+         data-controller="auto-dismiss" data-auto-dismiss-timeout-value="7000">
+      <span>⚠ <%= alert %></span>
+      <button data-action="click->auto-dismiss#dismiss" class="text-red-400 hover:text-red-200">✕</button>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,22 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+
+development:
+  <<: *default
+  database: kickai_development
+  host: <%= ENV.fetch("DB_HOST", "localhost") %>
+  username: <%= ENV.fetch("POSTGRES_USER", "kickai") %>
+  password: <%= ENV.fetch("POSTGRES_PASSWORD", "kickai_dev") %>
+
+test:
+  <<: *default
+  database: kickai_test
+  host: <%= ENV.fetch("DB_HOST", "localhost") %>
+  username: <%= ENV.fetch("POSTGRES_USER", "kickai") %>
+  password: <%= ENV.fetch("POSTGRES_PASSWORD", "") %>
+
+production:
+  <<: *default
+  url: <%= ENV["DATABASE_URL"] %>
