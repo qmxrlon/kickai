@@ -1,0 +1,20 @@
+<% content_for :title, "#{@match.title} · Admin" %>
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <%= render "admin/shared/nav" %>
+  <h1 class="text-2xl font-bold text-white"><%= @match.title %></h1>
+  <p class="text-sm text-gray-500 mt-1 mb-6"><%= @match.league.name %> · <%= @match.scheduled_at.strftime("%d.%m.%Y %H:%M") %> · <%= @match.status_label %></p>
+
+  <% if @match.prediction %>
+    <%= render "predictions/prediction_full", prediction: @match.prediction, match: @match %>
+  <% else %>
+    <p class="text-gray-400 mb-4">Noch keine Vorhersage vorhanden.</p>
+  <% end %>
+
+  <div class="mt-6 flex gap-3">
+    <%= button_to "Vorhersage neu berechnen", trigger_prediction_admin_match_path(@match), class: "px-4 py-2 rounded-lg bg-amber-600 text-sm text-white" %>
+    <%= button_to "Spiel löschen", admin_match_path(@match), method: :delete,
+          form: { data: { turbo_confirm: "Spiel wirklich löschen?" } },
+          class: "px-4 py-2 rounded-lg bg-red-900 text-sm text-red-200" %>
+  </div>
+</div>

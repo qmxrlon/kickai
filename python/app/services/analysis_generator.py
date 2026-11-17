@@ -21,7 +21,6 @@ class AnalysisGenerator:
         xga  = result.get("xg_away", 0)
         btts = result.get("btts_prob", 0)
         mu   = result.get("predicted_goals", 0)
-        rec  = result.get("recommended_outcome", "home")
 
         # Determine tone
         dominant = home if hw > aw else away
@@ -52,7 +51,7 @@ class AnalysisGenerator:
             )
         else:
             lines.append(
-                f"Dieses Spiel ist statistisch sehr ausgeglichen — beide Teams haben realistische Siegchancen."
+                "Dieses Spiel ist statistisch sehr ausgeglichen — beide Teams haben realistische Siegchancen."
             )
 
         lines += [
@@ -63,12 +62,15 @@ class AnalysisGenerator:
         ]
 
         if over25 > 0.6:
-            lines.append(f"Mit einer Wahrscheinlichkeit von {over25*100:.0f}% für Over 2,5 Tore empfehlen wir eine torreichere Partie einzuplanen.")
+            lines.append(
+                f"Mit einer Wahrscheinlichkeit von {over25*100:.0f}% für Over 2,5 Tore "
+                "ist eine torreiche Partie zu erwarten."
+            )
         elif over25 < 0.4:
             lines.append(f"Das Modell tendiert zu einer torarmen Begegnung (Under 2,5: {(1-over25)*100:.0f}%).")
 
         if btts > 0.6:
-            lines.append(f"Beide Teams haben mit {btts*100:.0f}% Wahrscheinlichkeit je mindestens ein Tor erzielt (BTTS Ja).")
+            lines.append(f"Mit {btts*100:.0f}% Wahrscheinlichkeit treffen beide Teams (BTTS Ja).")
         elif btts < 0.35:
             lines.append(f"Mindestens eines der Teams dürfte kein Tor erzielen (BTTS Nein: {(1-btts)*100:.0f}%).")
 
@@ -76,7 +78,8 @@ class AnalysisGenerator:
             "",
             f"*KI-Empfehlung: {result.get('recommended_bet', '–')}*",
             "",
-            "_Diese Analyse basiert ausschließlich auf statistischen Modellen und stellt keine Wettempfehlung im rechtlichen Sinne dar._"
+            "_Diese Analyse basiert ausschließlich auf statistischen Modellen "
+            "und stellt keine Wettempfehlung im rechtlichen Sinne dar._",
         ]
 
         return "\n".join(lines)

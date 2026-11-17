@@ -39,7 +39,7 @@
               <div class="px-4 py-2 border-b border-gray-700 text-gray-400 text-xs truncate"><%= current_user.email %></div>
               <%= link_to "Einstellungen", edit_user_registration_path, class: "block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition" %>
               <% if current_user.subscribed? %>
-                <%= link_to "Abo verwalten", portal_subscriptions_path, method: :post, class: "block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition" %>
+                <%= button_to "Abo verwalten", portal_subscriptions_path, form: { data: { turbo: false } }, class: "block w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition" %>
               <% end %>
               <%= link_to "Abmelden", destroy_user_session_path, data: { turbo_method: :delete }, class: "block px-4 py-2 text-red-400 hover:bg-gray-700 transition" %>
             </div>

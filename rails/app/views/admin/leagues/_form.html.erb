@@ -1,0 +1,11 @@
+<%= form_with model: [:admin, league], class: "space-y-4" do |f| %>
+  <%= render "admin/shared/errors", record: league %>
+  <% field = "w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white" %>
+  <div><%= f.label :name, "Name", class: "block text-sm text-gray-400 mb-1" %><%= f.text_field :name, class: field %></div>
+  <div><%= f.label :country, "Land", class: "block text-sm text-gray-400 mb-1" %><%= f.text_field :country, class: field %></div>
+  <div><%= f.label :external_id, "Football-Data.org ID (z. B. BL1)", class: "block text-sm text-gray-400 mb-1" %><%= f.text_field :external_id, class: field %></div>
+  <div><%= f.label :sport_id, "Sport", class: "block text-sm text-gray-400 mb-1" %><%= f.collection_select :sport_id, Sport.order(:name), :id, :name, {}, class: field %></div>
+  <div><%= f.label :logo_url, "Logo-URL", class: "block text-sm text-gray-400 mb-1" %><%= f.url_field :logo_url, class: field %></div>
+  <label class="flex items-center gap-2 text-sm text-gray-300"><%= f.check_box :active %> Aktiv</label>
+  <%= f.submit "Speichern", class: "px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-sm font-medium text-white cursor-pointer" %>
+<% end %>

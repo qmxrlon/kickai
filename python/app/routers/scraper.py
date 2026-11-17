@@ -1,4 +1,7 @@
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
+import asyncio
+from datetime import UTC, datetime
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 
 from app.auth import verify_api_key
 from app.scrapers.football_data_scraper import FootballDataScraper
@@ -18,6 +21,8 @@ async def fetch_matches(
     if _scraper_status["running"]:
         raise HTTPException(status_code=409, detail="Scraper already running.")
 
+    # Mark as running before scheduling, so a second request can't slip in
+    _scraper_status["running"] = True
     background_tasks.add_task(_run_scraper, competition_id)
     return {"status": "started"}
 
@@ -28,15 +33,10 @@ async def scraper_status(_: None = Depends(verify_api_key)):
 
 
 async def _run_scraper(competition_id: str | None):
-    import asyncio
-    from datetime import datetime
-
-    _scraper_status["running"] = True
     try:
-        loop = asyncio.get_event_loop()
-        count = await loop.run_in_executor(None, _scrape_sync, competition_id)
+        count = await asyncio.to_thread(_scrape_sync, competition_id)
         _scraper_status["matches_synced"] = count
-        _scraper_status["last_run"] = datetime.utcnow().isoformat()
+        _scraper_status["last_run"] = datetime.now(UTC).isoformat()
     finally:
         _scraper_status["running"] = False
 

@@ -16,7 +16,6 @@ gem "importmap-rails"
 
 # Auth
 gem "devise", "~> 4.9"
-gem "pundit", "~> 2.3"
 
 # Payments
 gem "pay", "~> 7.2"

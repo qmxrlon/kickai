@@ -1,4 +1,5 @@
 from dotenv import load_dotenv
+
 load_dotenv()  # must run before any app imports that read os.environ
 
 from contextlib import asynccontextmanager
@@ -6,8 +7,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import predictions, training, health, scraper
 from app.config import settings
+from app.routers import health, predictions, scraper, training
 
 
 @asynccontextmanager

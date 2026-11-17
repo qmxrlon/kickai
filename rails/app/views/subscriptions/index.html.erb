@@ -48,10 +48,11 @@
           <% if plan.free? %>
             <button disabled class="w-full py-3 rounded-xl bg-gray-800 text-gray-500 font-semibold text-sm cursor-not-allowed">Aktuell aktiv</button>
           <% elsif current_user.subscribed? %>
-            <%= link_to "Plan wechseln", portal_subscriptions_path, method: :post,
+            <%= button_to "Plan wechseln", portal_subscriptions_path, form: { data: { turbo: false } },
                   class: "block text-center w-full py-3 rounded-xl bg-gray-700 hover:bg-gray-600 text-white font-semibold text-sm transition" %>
           <% else %>
-            <%= link_to "#{plan.premium? ? "Premium starten" : "Basic starten"}", new_subscription_path(plan_id: plan.id),
+            <%= button_to "#{plan.premium? ? "Premium starten" : "Basic starten"}", subscriptions_path(plan_id: plan.id),
+                  form: { data: { turbo: false } },
                   class: "block text-center w-full py-3 rounded-xl font-semibold text-sm transition
                           #{plan.premium? ? "bg-emerald-500 hover:bg-emerald-400 text-white" : "bg-gray-700 hover:bg-gray-600 text-white"}" %>
           <% end %>

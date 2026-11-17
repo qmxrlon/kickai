@@ -13,16 +13,15 @@ Models:
 
 import logging
 import os
-from typing import Any, Optional
+from typing import Any
 
 import joblib
 import numpy as np
 import pandas as pd
+import xgboost as xgb
 from scipy.stats import poisson
 from sklearn.metrics import accuracy_score, log_loss
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-import xgboost as xgb
 
 logger = logging.getLogger(__name__)
 
@@ -30,14 +29,25 @@ MODEL_DIR = os.environ.get("MODEL_DIR", "/app/ml/saved_models")
 MODEL_VERSION = "1.2"
 
 
+TEST_FRACTION = 0.2
+
+
+def chronological_split_index(n_samples: int, test_fraction: float = TEST_FRACTION) -> int:
+    """Index that separates the oldest (train) from the newest (test) samples."""
+    if n_samples < 2:
+        raise ValueError("Need at least two samples to build a train/test split.")
+    split = int(n_samples * (1 - test_fraction))
+    return min(max(split, 1), n_samples - 1)
+
+
 class MLEngine:
     def __init__(self):
-        self.outcome_model: Optional[xgb.XGBClassifier]  = None
-        self.btts_model:    Optional[xgb.XGBClassifier]  = None
-        self.goals_model:   Optional[xgb.XGBRegressor]   = None
-        self.xg_home_model: Optional[xgb.XGBRegressor]   = None
-        self.xg_away_model: Optional[xgb.XGBRegressor]   = None
-        self.scaler:        Optional[StandardScaler]      = None
+        self.outcome_model: xgb.XGBClassifier | None  = None
+        self.btts_model:    xgb.XGBClassifier | None  = None
+        self.goals_model:   xgb.XGBRegressor | None   = None
+        self.xg_home_model: xgb.XGBRegressor | None   = None
+        self.xg_away_model: xgb.XGBRegressor | None   = None
+        self.scaler:        StandardScaler | None      = None
         self.model_version: str = MODEL_VERSION
 
         os.makedirs(MODEL_DIR, exist_ok=True)
@@ -61,22 +71,24 @@ class MLEngine:
 
         X = X_df.values.astype(np.float32)
 
-        self.scaler = StandardScaler()
-        X_scaled = self.scaler.fit_transform(X)
+        # Matches are ordered by kick-off time. Split chronologically so the
+        # models are always evaluated on matches *after* the ones they were
+        # trained on — a random split would leak future information.
+        split = chronological_split_index(len(X))
+        self.scaler = StandardScaler().fit(X[:split])
+        X_scaled = self.scaler.transform(X)
+        X_tr, X_te = X_scaled[:split], X_scaled[split:]
 
         results: dict[str, Any] = {
-            "training_samples": len(X),
+            "training_samples": split,
+            "test_samples":     len(X) - split,
             "feature_count":    X.shape[1],
             "model_version":    MODEL_VERSION,
         }
 
         # ── 1X2 outcome ───────────────────────────────────────────────────────
-        y_outcome = labels["outcome"]
-        try:
-            X_tr, X_te, y_tr, y_te = train_test_split(X_scaled, y_outcome, test_size=0.2, random_state=42, stratify=y_outcome)
-        except ValueError:
-            logger.warning("Stratified split failed (too few samples per class) — falling back to random split")
-            X_tr, X_te, y_tr, y_te = train_test_split(X_scaled, y_outcome, test_size=0.2, random_state=42)
+        y_outcome = labels["outcome"].to_numpy()
+        y_tr, y_te = y_outcome[:split], y_outcome[split:]
         self.outcome_model = xgb.XGBClassifier(
             n_estimators=300, max_depth=5, learning_rate=0.04,
             subsample=0.8, colsample_bytree=0.8,
@@ -85,38 +97,41 @@ class MLEngine:
         self.outcome_model.fit(X_tr, y_tr, eval_set=[(X_te, y_te)], verbose=False)
         y_pred = self.outcome_model.predict(X_te)
         results["outcome_accuracy"] = round(accuracy_score(y_te, y_pred), 4)
-        results["outcome_log_loss"] = round(log_loss(y_te, self.outcome_model.predict_proba(X_te)), 4)
+        results["outcome_log_loss"] = round(
+            log_loss(y_te, self.outcome_model.predict_proba(X_te), labels=[0, 1, 2]), 4
+        )
         logger.info("Outcome model trained — accuracy: %.3f", results["outcome_accuracy"])
 
         # ── BTTS ──────────────────────────────────────────────────────────────
-        y_btts = labels["btts"]
-        X_tr, X_te, y_tr, y_te = train_test_split(X_scaled, y_btts, test_size=0.2, random_state=42)
+        y_btts = labels["btts"].to_numpy()
         self.btts_model = xgb.XGBClassifier(
             n_estimators=200, max_depth=4, learning_rate=0.05,
             eval_metric="logloss", random_state=42, n_jobs=-1,
         )
-        self.btts_model.fit(X_tr, y_tr, verbose=False)
-        results["btts_accuracy"] = round(accuracy_score(y_te, self.btts_model.predict(X_te)), 4)
+        self.btts_model.fit(X_tr, y_btts[:split], verbose=False)
+        results["btts_accuracy"] = round(
+            accuracy_score(y_btts[split:], self.btts_model.predict(X_te)), 4
+        )
 
         # ── Total goals ───────────────────────────────────────────────────────
-        y_goals = labels["total_goals"].astype(np.float32)
-        X_tr, X_te, y_tr, y_te = train_test_split(X_scaled, y_goals, test_size=0.2, random_state=42)
+        y_goals = labels["total_goals"].to_numpy(dtype=np.float32)
         self.goals_model = xgb.XGBRegressor(
             n_estimators=200, max_depth=4, learning_rate=0.05,
             random_state=42, n_jobs=-1,
         )
-        self.goals_model.fit(X_tr, y_tr, verbose=False)
-        results["goals_mae"] = round(float(np.mean(np.abs(self.goals_model.predict(X_te) - y_te))), 4)
+        self.goals_model.fit(X_tr, y_goals[:split], verbose=False)
+        results["goals_mae"] = round(
+            float(np.mean(np.abs(self.goals_model.predict(X_te) - y_goals[split:]))), 4
+        )
 
-        # ── xG models ─────────────────────────────────────────────────────────
+        # ── xG models (only where xG data exists) ─────────────────────────────
         if "xg_home" in labels and labels["xg_home"].notna().sum() > 100:
             for attr, key in [("xg_home_model", "xg_home"), ("xg_away_model", "xg_away")]:
-                y_xg = labels[key].dropna().astype(np.float32)
-                idx  = labels[key].dropna().index
-                X_xg = X_scaled[idx]
-                X_tr, X_te, y_tr, y_te = train_test_split(X_xg, y_xg, test_size=0.2, random_state=42)
+                mask = labels[key].notna().to_numpy()
+                train_mask = mask.copy()
+                train_mask[split:] = False
                 model = xgb.XGBRegressor(n_estimators=150, max_depth=4, learning_rate=0.05, n_jobs=-1)
-                model.fit(X_tr, y_tr, verbose=False)
+                model.fit(X_scaled[train_mask], labels[key].to_numpy(dtype=np.float32)[train_mask], verbose=False)
                 setattr(self, attr, model)
 
         self._save_models()

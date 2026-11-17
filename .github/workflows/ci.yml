@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  python:
+    name: Python (ML engine)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: python/requirements.txt
+      - run: pip install -r requirements.txt pytest ruff
+      - name: Lint
+        run: ruff check .
+      - name: Tests
+        run: pytest -q
+
+  rails:
+    name: Rails (web app)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rails
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: kickai
+          POSTGRES_PASSWORD: kickai
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U kickai"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      RAILS_ENV: test
+      CI: "true"
+      DB_HOST: localhost
+      POSTGRES_USER: kickai
+      POSTGRES_PASSWORD: kickai
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: rails
+      - name: Prepare database
+        run: bin/rails db:create db:schema:load
+      - name: Tests
+        run: bundle exec rspec

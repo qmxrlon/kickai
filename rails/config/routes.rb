@@ -29,15 +29,13 @@ Rails.application.routes.draw do
 
   resources :predictions, only: %i[show]
 
-  resources :subscriptions, only: %i[index new create destroy] do
+  resources :subscriptions, only: %i[index create destroy] do
     collection do
       get  :success
       get  :cancel
       post :portal      # Stripe billing portal redirect
     end
   end
-
-  resources :tips, only: %i[index]
 
   get "pricing", to: "subscriptions#index", as: :pricing
 
@@ -46,17 +44,13 @@ Rails.application.routes.draw do
     root "dashboard#index"
     get "dashboard", to: "dashboard#index"
 
-    resources :users
-    resources :matches do
+    resources :matches, only: %i[index show destroy] do
       member do
         post :trigger_prediction
       end
     end
-    resources :leagues
-    resources :sports
-    resources :predictions, only: %i[index show destroy]
-    resources :subscription_plans
-    resources :betting_tips
+    resources :users, only: %i[index show edit update destroy]
+    resources :leagues, except: %i[show]
   end
 
   # ── Health check ─────────────────────────────────────────────────────────────

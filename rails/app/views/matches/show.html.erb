@@ -28,7 +28,7 @@
 
     <div class="flex justify-center">
       <span class="text-xs px-3 py-1 rounded-full border <%= @match.scheduled? ? "border-blue-700 text-blue-400" : "border-gray-700 text-gray-400" %>">
-        <%= @match.status.humanize %>
+        <%= @match.status_label %>
       </span>
     </div>
   </div>

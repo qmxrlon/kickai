@@ -1,5 +1,7 @@
 # KickAI — Sports Prediction Platform
 
+![CI](https://github.com/qmxrlon/kickai/actions/workflows/ci.yml/badge.svg)
+
 Self-hosted AI-powered sports analysis software. Users install it on their own server and subscribe to access ML-based match predictions.
 
 ## Architecture
@@ -115,7 +117,37 @@ The prediction engine uses **XGBoost** models trained on historical match data:
 
 Feature set: last-5 and last-10 game form, goals for/against averages, H2H record, days rest, league context.
 
+Features for a match are computed only from matches played *before* it. Models are evaluated on a **chronological split** (oldest 80 % train, newest 20 % test), and the scaler is fitted on the training part only, so reported metrics are not inflated by future data.
+
 Models are saved in a Docker volume (`ml_models`) and auto-loaded on service start.
+
+## Development & tests
+
+```bash
+# Python ML engine
+cd python
+pip install -r requirements.txt pytest ruff
+ruff check . && pytest
+
+# Rails app (needs PostgreSQL)
+cd rails
+bundle install
+bin/rails db:create db:schema:load RAILS_ENV=test
+bundle exec rspec
+```
+
+GitHub Actions runs both suites on every push and pull request.
+
+## Project structure
+
+```
+nginx/     reverse proxy config
+rails/     web app: UI, auth (Devise), subscriptions (Pay/Stripe), admin, Sidekiq jobs
+python/    FastAPI ML engine: scraper, feature engineering, XGBoost models
+  app/scrapers/   Football-Data.org client with free-tier rate limiting
+  app/services/   feature engineering, training, prediction, analysis text
+  tests/          pytest suite
+```
 
 ## Legal Notice (Germany)
 

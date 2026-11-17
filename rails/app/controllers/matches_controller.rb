@@ -1,5 +1,7 @@
 class MatchesController < ApplicationController
   skip_before_action :authenticate_user!, only: %i[index show]
+  # Runs as a filter so the action halts after the redirect for non-premium users
+  before_action :require_premium!, only: :prediction
 
   def index
     @q       = Match.ransack(params[:q])
@@ -30,15 +32,13 @@ class MatchesController < ApplicationController
   end
 
   def prediction
-    @match = Match.find(params[:id])
-    require_premium!
+    match = Match.find(params[:id])
 
-    @prediction = @match.prediction
-
-    if @prediction.nil?
-      GeneratePredictionsJob.perform_later(@match.id)
-      flash[:notice] = "Vorhersage wird generiert – bitte in einigen Minuten erneut laden."
-      redirect_to match_path(@match)
+    if match.prediction
+      redirect_to prediction_path(match.prediction)
+    else
+      GeneratePredictionsJob.perform_later(match.id)
+      redirect_to match_path(match), notice: "Vorhersage wird generiert – bitte in einigen Minuten erneut laden."
     end
   end
 end

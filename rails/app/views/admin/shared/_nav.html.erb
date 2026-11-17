@@ -1,0 +1,5 @@
+<nav class="flex flex-wrap gap-2 mb-8 text-sm">
+  <% [["Übersicht", admin_root_path], ["Benutzer", admin_users_path], ["Spiele", admin_matches_path], ["Ligen", admin_leagues_path]].each do |label, path| %>
+    <%= link_to label, path, class: "px-3 py-1.5 rounded-lg border #{current_page?(path) ? "border-amber-500 text-amber-300" : "border-gray-800 text-gray-400 hover:text-white"}" %>
+  <% end %>
+</nav>

@@ -1,10 +1,10 @@
 import asyncio
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 
 from app.auth import verify_api_key
-from app.services.ml_engine import MLEngine
 from app.services.data_fetcher import DataFetcher
+from app.services.ml_engine import MLEngine
 
 router = APIRouter(tags=["training"])
 

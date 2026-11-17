@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+
 from app.database import check_connection
 
 router = APIRouter(tags=["health"])

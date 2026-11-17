@@ -1,17 +1,16 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel
 
 
 class PredictionRequest(BaseModel):
     match_id: int
-    external_id: Optional[str] = None
-    home_team_id: Optional[str] = None
-    away_team_id: Optional[str] = None
+    external_id: str | None = None
+    home_team_id: str | None = None
+    away_team_id: str | None = None
     home_team_name: str
     away_team_name: str
-    league_id: Optional[str] = None
+    league_id: str | None = None
     scheduled_at: datetime
 
 
@@ -30,5 +29,5 @@ class PredictionResponse(BaseModel):
     kelly_fraction: float
     ai_analysis: str
     model_version: str
-    recommended_outcome: Optional[str] = None
-    max_probability: Optional[float] = None
+    recommended_outcome: str | None = None
+    max_probability: float | None = None

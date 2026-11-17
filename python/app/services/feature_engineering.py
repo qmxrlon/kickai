@@ -13,7 +13,6 @@ Feature set (per match):
 
 import logging
 from datetime import datetime
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -29,7 +28,7 @@ FORM_WINDOW_LONG  = 10
 
 class FeatureEngineer:
     def __init__(self):
-        self._match_cache: Optional[pd.DataFrame] = None
+        self._match_cache: pd.DataFrame | None = None
 
     # ── Training data preparation ────────────────────────────────────────────
 
@@ -72,9 +71,9 @@ class FeatureEngineer:
 
     def build_features_for_match(
         self,
-        home_team_id: Optional[str],
-        away_team_id: Optional[str],
-        league_id: Optional[str],
+        home_team_id: str | None,
+        away_team_id: str | None,
+        league_id: str | None,
         scheduled_at: datetime,
     ) -> np.ndarray:
         """Build a single feature vector for an upcoming match."""
@@ -99,7 +98,7 @@ class FeatureEngineer:
 
     # ── Internal ─────────────────────────────────────────────────────────────
 
-    def _compute_features(self, row: pd.Series, history: pd.DataFrame) -> Optional[dict]:
+    def _compute_features(self, row: pd.Series, history: pd.DataFrame) -> dict | None:
         home_id = str(row["home_team_id"])
         away_id = str(row["away_team_id"])
 

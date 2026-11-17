@@ -1,11 +1,11 @@
-from fastapi import APIRouter, HTTPException, Request, Depends
+from fastapi import APIRouter, Depends, HTTPException, Request
 
-from app.schemas.prediction import PredictionRequest, PredictionResponse
-from app.services.feature_engineering import FeatureEngineer
-from app.services.analysis_generator import AnalysisGenerator
-from app.services.ml_engine import MLEngine
-from app.services.kelly_calculator import kelly_fraction
 from app.auth import verify_api_key
+from app.schemas.prediction import PredictionRequest, PredictionResponse
+from app.services.analysis_generator import AnalysisGenerator
+from app.services.feature_engineering import FeatureEngineer
+from app.services.kelly_calculator import kelly_fraction
+from app.services.ml_engine import MLEngine
 
 router = APIRouter(tags=["predictions"])
 

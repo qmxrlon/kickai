@@ -7,7 +7,7 @@ This is the Python-side complement to the Rails FootballDataClient.
 
 import logging
 import time
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import httpx
 from sqlalchemy import text
@@ -43,8 +43,8 @@ class FootballDataScraper:
         return total
 
     def _sync_competition(self, competition_id: str) -> int:
-        date_from = (datetime.utcnow() - timedelta(days=90)).strftime("%Y-%m-%d")
-        date_to   = (datetime.utcnow() + timedelta(days=14)).strftime("%Y-%m-%d")
+        date_from = (datetime.now(UTC) - timedelta(days=90)).strftime("%Y-%m-%d")
+        date_to   = (datetime.now(UTC) + timedelta(days=14)).strftime("%Y-%m-%d")
 
         url = f"{BASE_URL}/competitions/{competition_id}/matches"
         params = {

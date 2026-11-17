@@ -2,7 +2,8 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    database_url: str = "postgresql://kickai:password@db/kickai_production"
+    # No default with credentials: DATABASE_URL must come from the environment
+    database_url: str = ""
     redis_url: str = "redis://redis:6379/0"
     api_secret_key: str = ""
     football_data_api_key: str = ""

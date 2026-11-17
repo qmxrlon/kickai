@@ -16,6 +16,15 @@ class User < ApplicationRecord
   # Validations
   validates :email, presence: true, uniqueness: { case_sensitive: false }
 
+  # Searchable fields in the admin user list (Ransack allowlist)
+  def self.ransackable_attributes(_auth_object = nil)
+    %w[email name role created_at]
+  end
+
+  def self.ransackable_associations(_auth_object = nil)
+    []
+  end
+
   # Subscription helpers
   def subscribed?
     payment_processor.subscribed? rescue false

@@ -1,0 +1,30 @@
+<% content_for :title, "Ligen · Admin" %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-bold text-white">Ligen</h1>
+    <%= link_to "+ Neue Liga", new_admin_league_path, class: "px-4 py-2 rounded-lg bg-amber-600 text-sm text-white" %>
+  </div>
+  <%= render "admin/shared/nav" %>
+
+  <table class="w-full text-sm">
+    <thead class="text-left text-gray-500 border-b border-gray-800">
+      <tr><th class="py-2">Liga</th><th>Land</th><th>API-ID</th><th>Sport</th><th>Aktiv</th><th></th></tr>
+    </thead>
+    <tbody class="divide-y divide-gray-800">
+      <% @leagues.each do |l| %>
+        <tr>
+          <td class="py-2 text-gray-200"><%= l.flag_emoji %> <%= l.name %></td>
+          <td class="text-gray-400"><%= l.country %></td>
+          <td class="text-gray-400 font-mono"><%= l.external_id %></td>
+          <td class="text-gray-400"><%= l.sport.name %></td>
+          <td class="<%= l.active? ? "text-emerald-400" : "text-gray-600" %>"><%= l.active? ? "Ja" : "Nein" %></td>
+          <td class="text-right space-x-3">
+            <%= link_to "Bearbeiten", edit_admin_league_path(l), class: "text-amber-400 hover:text-amber-300" %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+  <div class="mt-4"><%== pagy_nav(@pagy) if @pagy.pages > 1 %></div>
+</div>
